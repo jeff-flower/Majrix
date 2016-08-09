@@ -12,4 +12,12 @@ No, no we didn't. In case you're not already aware of it's awesomeness, [Clojure
 [Clojure For the Brave and True](http://www.braveclojure.com) is an excellent resource.
 
 ## Getting Started
-...more to come
+
+### IDE Setup
+- [Cursive IntelliJ plugin](https://cursive-ide.com/userguide/index.html)
+- Emacs setup
+  + [general system setup](http://www.braveclojure.com/getting-started/)
+  + [emacs setup](www.braveclojure.com/basic-emacs/)
+- [Counterclockwise Eclipse plugin](http://doc.ccw-ide.org/documentation.html)
+- [Sublime Text](https://spin.atomicobject.com/2016/04/08/sublime-text-clojure/)
+  + Note: you'll probably need to set up some things on your own such as Leiningen
