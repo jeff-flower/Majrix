@@ -21,3 +21,9 @@ No, no we didn't. In case you're not already aware of it's awesomeness, [Clojure
 - [Counterclockwise Eclipse plugin](http://doc.ccw-ide.org/documentation.html)
 - [Sublime Text](https://spin.atomicobject.com/2016/04/08/sublime-text-clojure/)
   + Note: you'll probably need to set up some things on your own such as Leiningen
+  
+### Documentation
+We've chosen to use [Marginalia](https://github.com/gdeer81/marginalia) to document our code. Documentation is located in the
+'docs' folder. For instructions on how to format comments so the documentation is generated correctly, see [here](gdeer81.github.io/marginalia/).  
+
+To generate documentation, from the project root run `lein marg`

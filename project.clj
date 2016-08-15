@@ -7,7 +7,7 @@
                  [ring/ring-defaults "0.2.1"]
                  [midje "1.8.3"]]
   :plugins [[lein-ring "0.9.7"]
-            [lein-marginalia "0.8.0"]]
+            [lein-marginalia "0.9.0"]]
   :ring {:handler majrix.handler/app}
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
