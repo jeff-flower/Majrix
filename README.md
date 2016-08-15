@@ -26,4 +26,8 @@ No, no we didn't. In case you're not already aware of it's awesomeness, [Clojure
 We've chosen to use [Marginalia](https://github.com/gdeer81/marginalia) to document our code. Documentation is located in the
 'docs' folder. For instructions on how to format comments so the documentation is generated correctly, see [here](gdeer81.github.io/marginalia/).  
 
-To generate documentation, from the project root run `lein marg`
+To generate documentation, from the project root run `lein marg` This will produce a file named uberdoc.html in the docs folder.
+
+### Testing
+
+### Compojure
