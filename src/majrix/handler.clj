@@ -21,9 +21,25 @@
   []
   "Hello World")
 
+(defn register-user
+  "Register a user. Currently does not support guest accounts, users must 
+  register."
+  []
+  ;; - return a 400 if username is invalid, in use, or belongs to the application
+  ;;   namespace, or doesn't contain the required properties
+  ;; - create a protocol that defines interactions with a database
+  ;; - create a class that implements these protocols
+  ;; - create schema for the route
+  ;; - check error handling at both the api, server, and database levels
+  ;; - how to generate access tokens? it correlates to the user, should be unique
+  ;; - write simple solutions, make notes about fixmes
+
+  "Hello world")
+
 (defroutes app-routes
+  (POST "/_matrix/client/r0/register" [] (register-user))
   (GET "/" [] (examplefunc))
   (route/not-found "Not Found"))
 
 (def app
-  (wrap-defaults app-routes site-defaults))
+  (wrap-defaults app-routes (assoc-in site-defaults [:security :anti-forgery] false)))

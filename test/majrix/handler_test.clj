@@ -12,6 +12,10 @@
     (= 1 1) => false))
 
 (facts "Main route" 
+  (fact "returns 200 and 'hello world' for register route"
+    (let [response (app (mock/request :post "/_matrix/client/r0/register"))]
+      (= (:status response) 200) => true
+      (= (:body response) "Hello world") => true))
   (fact "returns 200 and 'hello world' for valid route request"
     (let [response (app (mock/request :get "/"))]
       (= (:status response) 200) => true 
