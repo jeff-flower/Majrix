@@ -36,7 +36,7 @@
   ;; - how to generate access tokens? it correlates to the user, should be unique
   ;; - write simple solutions, make notes about fixmes
   
-  (let [new-user-details (db/add-user req-body)]
+  (let [new-user-details (db/register-user req-body)]
     (str "username: " (:user_id new-user-details) " access token: " (:access_token new-user-details))))
 
 (defroutes app-routes
