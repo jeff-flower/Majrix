@@ -55,3 +55,21 @@ your project and enter:
     => lein midje
 
 ### Compojure
+
+### Docker
+The `Dockerfile` sets up a development environment for you and lets you focus on
+the code rather than setting everything up. This image sets up the following
+
+- Spins up a neo4j instance.
+- Downloads leiningen.
+- Clones the `majrix` repository (at `/var/lib/majrix`).
+
+You can access `neo4j` (port 7474) and `majrix` (port 3000, must be started
+first) server on the host as well!
+
+```sh
+docker build -t majrix .
+docker create -it --name majrix --publish=7474:7474 --publish=3000:3000 --volume=$HOME/neo4j/data:/data majrix
+docker start majrix
+docker exec -it majrix bash
+```
