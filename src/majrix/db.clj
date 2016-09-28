@@ -1,4 +1,7 @@
-(ns majrix.db)
+(ns majrix.db
+  (:require
+   [clj-http.client :as client]
+   [cheshire.core :as cheshire]))
 
 ; this is probably a terrible idea
 (def baseUrl "http://hobby-glcdifjnbmnagbkekibbcdnl.dbs.graphenedb.com:24789/db/data/")
