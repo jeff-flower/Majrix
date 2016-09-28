@@ -1,11 +1,10 @@
 (ns majrix.db
   (:require
    [clj-http.client :as client]
-   [cheshire.core :as cheshire]))
+   [cheshire.core :as cheshire]
+   [majrix.credentials :as creds]))
 
-; this is probably a terrible idea
-(def baseUrl "http://hobby-glcdifjnbmnagbkekibbcdnl.dbs.graphenedb.com:24789/db/data/")
-(def credentials ["majrix" "6KlWQ4kr7MeUx4LldF1X"])
+
 
 ; define a map to hold neo4j endpoints
 (def endpoints 
@@ -31,7 +30,7 @@
 (defn create-user!
   [user-id]
   (client/post 
-   (str baseUrl (:cypher endpoints))
-   {:basic-auth credentials
+   (str creds/baseUrl (:cypher endpoints))
+   {:basic-auth creds/credentials 
     :content-type :json
     :body (build-cypher-json user-id)}))
