@@ -1,15 +1,14 @@
 (ns majrix.db
-  (:require
-   [clj-http.client :as client]
-   [cheshire.core :as cheshire]
-   [majrix.credentials :as creds]))
+  (:require [clj-http.client :as client]
+            [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [cheshire.core :as cheshire]))
 
-
+(def config (edn/read-string (slurp (io/resource "properties.edn"))))
 
 ; define a map to hold neo4j endpoints
 (def endpoints 
   {:cypher "transaction/commit"})
-
 
 ;;;;; CREATE NEW USER ;;;;;
 ; neo4j requires cypher query to have the following jsonformat 
@@ -18,9 +17,7 @@
 ; take a user name and build a cypher query to add the user to the db
 (defn build-add-user-query
   [user-id]
-  (let [qstart "CREATE (u:User {user_id: \""
-        qend "\"}) RETURN u.user_id as user_id"]
-    (str qstart user-id qend)))
+  (format "CREATE (u:User {user_id: \"%s\"}) RETURN u.user_id AS user_id" user-id))
 
 ; create the json structure a cypher request needs to have 
 (defn build-cypher-json
@@ -29,8 +26,10 @@
 
 (defn create-user!
   [user-id]
-  (client/post 
-   (str creds/baseUrl (:cypher endpoints))
-   {:basic-auth creds/credentials 
-    :content-type :json
-    :body (build-cypher-json user-id)}))
+  (let [database (:database config)
+        url (str (:base-url database) (:cypher endpoints))
+        username (:username database)
+        password (:password database)]
+    (client/post url {:basic-auth [username password]
+                      :content-type :json
+                      :body (build-cypher-json user-id)})))

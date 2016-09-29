@@ -10,3 +10,4 @@ pom.xml.asc
 /.nrepl-port
 /README.html
 /src/majrix/credentials.clj
+/resources/properties.edn
