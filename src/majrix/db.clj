@@ -10,6 +10,30 @@
 (def endpoints 
   {:cypher "transaction/commit"})
 
+; parse the json body of a neo4j response object and return a map
+(defn parse-body
+  [{body :body}]
+  (cheshire/parse-string body true))
+
+; return true if the body map contains an empty :errors array
+; or if the errors key does not exist in the body
+; if i'm reading the neo4j api correctly, cypher transactions will alwyas return a 200 code
+; if there are any errors, the erros array will not be empty
+; for any other apis, a successful response will return an object with no errors array
+; pass the parsed body of a reponse to this function
+(defn no-errors?
+  [{errors :errors}]
+  (if errors 
+    ; if errors exists check to see if the array is empty or not
+    (empty? errors)
+    ; else return true, there was no errors key in the body
+    true))
+
+; return true if the response contains no errors
+(defn successful-response?
+  [res]
+  (no-errors? (parse-body res)))
+
 ;;;;; CREATE NEW USER ;;;;;
 ; neo4j requires cypher query to have the following jsonformat 
 ; { "statements": [{ "statement" : ... }]}
