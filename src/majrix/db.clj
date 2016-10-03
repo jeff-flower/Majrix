@@ -1,8 +1,9 @@
 (ns majrix.db
-  (:require [clj-http.client :as client]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [cheshire.core :as cheshire]))
+  (:require
+   [clj-http.client :as client]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
+   [cheshire.core :as cheshire]))
 
 (def config (edn/read-string (slurp (io/resource "properties.edn"))))
 
@@ -49,11 +50,16 @@
   (cheshire/generate-string {:statements [{:statement (build-add-user-query user-id)}]}))
 
 (defn create-user!
+  "Attempts to create a user in the database."
   [user-id]
   (let [database (:database config)
         url (str (:base-url database) (:cypher endpoints))
         username (:username database)
         password (:password database)]
-    (client/post url {:basic-auth [username password]
-                      :content-type :json
-                      :body (build-cypher-json user-id)})))
+    (try
+      (client/post url {:basic-auth [username password]
+                        :content-type :json
+                        :body (build-cypher-json user-id)})
+      {:successful? true}
+      (catch Exception e
+        {:successful? false}))))
