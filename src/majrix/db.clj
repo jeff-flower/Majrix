@@ -11,11 +11,6 @@
 (def endpoints 
   {:cypher "transaction/commit"})
 
-; parse the json body of a neo4j response object and return a map
-(defn parse-body
-  [{body :body}]
-  (cheshire/parse-string body true))
-
 ; return true if the body map contains an empty :errors array
 ; or if the errors key does not exist in the body
 ; if i'm reading the neo4j api correctly, cypher transactions will alwyas return a 200 code
@@ -33,7 +28,7 @@
 ; return true if the response contains no errors
 (defn successful-response?
   [res]
-  (no-errors? (parse-body res)))
+  (no-errors? (cheshire/parse-string (:body res) true)))
 
 ;;;;; CREATE NEW USER ;;;;;
 ; neo4j requires cypher query to have the following jsonformat 
@@ -57,9 +52,9 @@
         username (:username database)
         password (:password database)]
     (try
-      (client/post url {:basic-auth [username password]
-                        :content-type :json
-                        :body (build-cypher-json user-id)})
-      {:successful? true}
+      (let [res (client/post url {:basic-auth [username password]
+                                  :content-type :json
+                                  :body (build-cypher-json user-id)})]
+        {:successful? (successful-response? res)})
       (catch Exception e
         {:successful? false}))))
