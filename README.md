@@ -22,6 +22,21 @@ No, no we didn't. In case you're not already aware of it's awesomeness, [Clojure
 - [Sublime Text](https://spin.atomicobject.com/2016/04/08/sublime-text-clojure/)
   + Note: you'll probably need to set up some things on your own such as Leiningen
   
+### Database Setup
+Since it's early, we're using a free Graphene Neo4j database instance. Head over to [Graphene]() and sign up. Once you've registered, from the main screen after logging in, go to the 'Connection' tab. Make note of the 'REST URL', the 'REST Username' and the 'REST Password', you'll need them later.
+  
+### Properties.edn file
+You'll need a place to store user specific configuration values. From the root of the project
+
+    touch resources/properties.edn
+    
+Open the new file and add the following, replacing the values where indicated
+
+    {:database
+      {:base-url "your-rest-server-url"
+       :username "your-username"
+       :password "your-password"}}
+
 ### Documentation
 We've chosen to use [Marginalia](https://github.com/gdeer81/marginalia) to document our code. Documentation is located in the
 'docs' folder. For instructions on how to format comments so the documentation is generated correctly, see [here](gdeer81.github.io/marginalia/).  
