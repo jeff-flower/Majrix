@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [cheshire.core :as cheshire]))
 
-(def config (-> (io/resource "properties.edn")
+(def config (-> (io/resource "db.edn")
                 slurp
                 edn/read-string))
 
