@@ -44,12 +44,12 @@
 
 (defn create-user!
   "Attempts to create a user in the database."
-  [user-id]
+  [user-id home-server]
   (let [database (:database config)
         url (str (:base-url database) (:cypher endpoints))
         username (:username database)
         password (:password database)
-        body (format "CREATE (u:User {user_id: '%s'})" user-id)]
+        body (format "CREATE (u:User {user_id: '%s' home_server: '%s'})" user-id home-server)]
     (try
       (let [response (client/post url {:basic-auth [username password]
                                        :content-type :json
