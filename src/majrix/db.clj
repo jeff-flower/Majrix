@@ -11,10 +11,33 @@
 (def endpoints 
   {:cypher "transaction/commit"})
 
+; return the neo4j error code from the first error object in a non-empty errors array
+(defn first-error
+  [errors_arr]
+  ; neo4j error code tied to the 'code' property
+  (:code (first errors_arr)))
+
+; if the response body has a non-empty error array, return the first error code,
+; otherwise return nil
+; accepts the cheshire parsed body of a response
+(defn get-error
+  [{errors :errors}]
+  (cond
+    (not errors) nil
+    (and errors (empty? errors)) nil
+    :else (first-error errors)))
+
+;; TODO: 
+;; 1) create a map between neo4j errors and majrix error codes
+;; 2) create a function that passes the response body to get-error,
+;; takes the result and returns a map with keyword :error_code and value
+;; of the result from get-error
+;; 3) integrate the new function with create-user! 
+
 ; return true if the body map contains an empty :errors array
 ; or if the errors key does not exist in the body
 ; if i'm reading the neo4j api correctly, cypher transactions will alwyas return a 200 code
-; if there are any errors, the erros array will not be empty
+; if there are any errors, the errors array will not be empty
 ; for any other apis, a successful response will return an object with no errors array
 ; pass the parsed body of a reponse to this function
 (defn no-errors?
