@@ -1,71 +1,46 @@
 (ns majrix.db
-  (:require
-   [clj-http.client :as client]
-   [clojure.edn :as edn]
-   [clojure.java.io :as io]
-   [cheshire.core :as cheshire]))
+  (:require [clj-http.client :as client]
+            [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [cheshire.core :as cheshire]))
 
-(def config (edn/read-string (slurp (io/resource "properties.edn"))))
+(def config (-> (io/resource "properties.edn")
+                slurp
+                edn/read-string))
 
 ; define a map to hold neo4j endpoints
 (def endpoints 
   {:cypher "transaction/commit"})
 
-; return the neo4j error code from the first error object in a non-empty errors array
-(defn first-error
-  [errors_arr]
-  ; neo4j error code tied to the 'code' property
-  (:code (first errors_arr)))
+; TODO: 
+; 1) create a map between neo4j errors and majrix error codes
+; 2) create a function that passes the response body to get-error,
+; takes the result and returns a map with keyword :error_code and value
+; of the result from get-error
+; 3) integrate the new function with create-user! 
 
-; if the response body has a non-empty error array, return the first error code,
-; otherwise return nil
-; accepts the cheshire parsed body of a response
+(defn build-cypher-body
+  "Creates a JSON formatted string suitable for Neo4j's HTTP transaction API. As
+  stated in Neo4j's [documentation](http://neo4j.com/docs/developer-manual/current/http-api/),
+  the transaction body should be formatted as such
+
+    {
+      \"statements\": [
+        { \"statement\": \"CREATE (u:User {name: 'Alice'})\" }
+      ]
+    }"
+  [statement]
+  (cheshire/generate-string {:statements [{:statement statement}]}))
+
 (defn get-error
-  [{errors :errors}]
-  (cond
-    (not errors) nil
-    (and errors (empty? errors)) nil
-    :else (first-error errors)))
-
-;; TODO: 
-;; 1) create a map between neo4j errors and majrix error codes
-;; 2) create a function that passes the response body to get-error,
-;; takes the result and returns a map with keyword :error_code and value
-;; of the result from get-error
-;; 3) integrate the new function with create-user! 
-
-; return true if the body map contains an empty :errors array
-; or if the errors key does not exist in the body
-; if i'm reading the neo4j api correctly, cypher transactions will alwyas return a 200 code
-; if there are any errors, the errors array will not be empty
-; for any other apis, a successful response will return an object with no errors array
-; pass the parsed body of a reponse to this function
-(defn no-errors?
-  [{errors :errors}]
-  (if errors 
-    ; if errors exists check to see if the array is empty or not
-    (empty? errors)
-    ; else return true, there was no errors key in the body
-    true))
-
-; return true if the response contains no errors
-(defn successful-response?
-  [res]
-  (no-errors? (cheshire/parse-string (:body res) true)))
-
-;;;;; CREATE NEW USER ;;;;;
-; neo4j requires cypher query to have the following jsonformat 
-; { "statements": [{ "statement" : ... }]}
-
-; take a user name and build a cypher query to add the user to the db
-(defn build-add-user-query
-  [user-id]
-  (format "CREATE (u:User {user_id: \"%s\"}) RETURN u.user_id AS user_id" user-id))
-
-; create the json structure a cypher request needs to have 
-(defn build-cypher-json
-  [user-id]
-  (cheshire/generate-string {:statements [{:statement (build-add-user-query user-id)}]}))
+  "Grabs the first error code from Neo4j's response, if present. Otherwise
+  returns nil."
+  [{error :errors}]
+  (if (empty? error)
+    nil
+    (-> error
+        first
+        :code)))
 
 (defn create-user!
   "Attempts to create a user in the database."
@@ -73,11 +48,18 @@
   (let [database (:database config)
         url (str (:base-url database) (:cypher endpoints))
         username (:username database)
-        password (:password database)]
+        password (:password database)
+        body (format "CREATE (u:User {user_id: '%s'})" user-id)]
     (try
-      (let [res (client/post url {:basic-auth [username password]
-                                  :content-type :json
-                                  :body (build-cypher-json user-id)})]
-        {:successful? (successful-response? res)})
+      (let [response (client/post url {:basic-auth [username password]
+                                       :content-type :json
+                                       :body (build-cypher-body body)})]
+        {:error (condp = (get-error response)
+                  "Neo.ClientError.Schema.ConstraintValidationFailed" :M_USER_IN_USE)})
       (catch Exception e
-        {:successful? false}))))
+        ;; An unsuccessful status code means something went wrong with the
+        ;; database connection (system down, unauthorized, etc.). This is
+        ;; a nonstandard Matrix error and the API shouldn't respond with
+        ;; any information about what went wrong. We will want to log
+        ;; what problem occurred.
+        {:error :SYSTEM_ERROR}))))

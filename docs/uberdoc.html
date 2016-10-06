@@ -2866,11 +2866,13 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>majrix -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://www.github.com/jeff-flower/Majrix">majrix</a></h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A Matrix chat client written in Clojure</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">ring/ring-defaults</td><td class="dotted"><hr /></td><td class="dep-version">0.2.1</td></tr><tr><td class="dep-name">midje</td><td class="dotted"><hr /></td><td class="dep-version">1.8.3</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#majrix.handler">majrix.handler</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#majrix.handler" name="majrix.handler"><h1 class="project-name">majrix.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Server definition</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.5.1</td></tr><tr><td class="dep-name">ring/ring-defaults</td><td class="dotted"><hr /></td><td class="dep-version">0.2.1</td></tr><tr><td class="dep-name">ring/ring-json</td><td class="dotted"><hr /></td><td class="dep-version">0.4.0</td></tr><tr><td class="dep-name">clj-http</td><td class="dotted"><hr /></td><td class="dep-version">2.3.0</td></tr><tr><td class="dep-name">cheshire</td><td class="dotted"><hr /></td><td class="dep-version">5.6.3</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#majrix.handler">majrix.handler</a></li><li><a href="#majrix.db">majrix.db</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#majrix.handler" name="majrix.handler"><h1 class="project-name">majrix.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Server definition</p>
 </td><td class="codes"><pre class="brush: clojure">(ns majrix.handler
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]))</pre></td></tr><tr><td class="docs"><p>This comment should show on the lefthand side of the docs</p>
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [ring.middleware.json :refer [wrap-json-body]]
+            [majrix.db :as db]))</pre></td></tr><tr><td class="docs"><p>This comment should show on the lefthand side of the docs</p>
 
 <p>  ## Markup examples ##</p>
 
@@ -2888,12 +2890,74 @@ net.brehaut.ClojureTools = (function (SH) {
 <p>none</p>
 </td><td class="codes"><pre class="brush: clojure">(defn examplefunc
   []
-  &quot;Hello World&quot;)</pre></td></tr><tr><td class="docs">
+  &quot;Hello World&quot;)</pre></td></tr><tr><td class="docs"><p>Register a user. Currently does not support guest accounts, users must 
+  register.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn register-user
+  [req-body]
+  ;; - return a 400 if username is invalid, in use, or belongs to the application
+  ;;   namespace, or doesn't contain the required properties
+  ;; - create a protocol that defines interactions with a database
+  ;; - create a class that implements these protocols
+  ;; - create schema for the route
+  ;; - check error handling at both the api, server, and database levels
+  ;; - how to generate access tokens? it correlates to the user, should be unique
+  ;; - write simple solutions, make notes about fixmes
+  (db/create-user! (get req-body &quot;username&quot;)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defroutes app-routes
+  (POST &quot;/_matrix/client/r0/register&quot; req (register-user (:body req)))
   (GET &quot;/&quot; [] (examplefunc))
   (route/not-found &quot;Not Found&quot;))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def app
-  (wrap-defaults app-routes site-defaults))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_majrix.handler">majrix.handler</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+  (wrap-defaults (wrap-json-body app-routes) (assoc-in site-defaults [:security :anti-forgery] false)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#majrix.db" name="majrix.db"><h1 class="project-name">majrix.db</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns majrix.db
+  (:require [clj-http.client :as client]
+            [clojure.edn :as edn]
+            [clojure.java.io :as io]
+            [cheshire.core :as cheshire]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def config (-&gt; (io/resource &quot;properties.edn&quot;)
+                slurp
+                edn/read-string))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def endpoints 
+  {:cypher &quot;transaction/commit&quot;})</pre></td></tr><tr><td class="docs"><p>Creates a JSON formatted string suitable for Neo4j's HTTP transaction API. As
+  stated in Neo4j's <a href="http://neo4j.com/docs/developer-manual/current/http-api/">documentation</a>,
+  the transaction body should be formatted as such</p>
+
+<pre><code>{
+  "statements": [
+    { "statement": "CREATE (u:User {name: 'Alice'})" }
+  ]
+}
+</code></pre>
+</td><td class="codes"><pre class="brush: clojure">(defn build-http-body
+  [statement]
+  (cheshire/generate-string {:statements [{:statement statement}]}))</pre></td></tr><tr><td class="docs"><p>Grabs the first error code from Neo4j's response, if present. Otherwise
+  returns nil.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn get-error
+  [{error :errors}]
+  (if (empty? error)
+    nil
+    (-&gt; error
+        first
+        :code)))</pre></td></tr><tr><td class="docs"><p>Attempts to create a user in the database.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn create-user!
+  [username]
+  (let [database (:database config)
+        url (str (:base-url database) (:cypher endpoints))
+        username (:username database)
+        password (:password database)
+        body (format &quot;CREATE (u:User {name: '%s'})&quot; username)]
+    (try
+      (let [response (client/post url {:basic-auth [username password]
+                                       :content-type :json
+                                       :body (build-http-body body)})]
+        {:error (get-error response)})
+      (catch Exception e
+        ;; An unsuccessful status code means something went wrong with the
+        ;; database connection (system down, unauthorized, etc.). This is
+        ;; a nonstandard Matrix error and the API shouldn't respond with
+        ;; any information about what went wrong. We will want to log
+        ;; what problem occurred.
+        {:error :SYSTEM_ERROR}))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_majrix.handler">majrix.handler</li><li class="floating-toc-li" id="floating-toc_majrix.db">majrix.db</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
