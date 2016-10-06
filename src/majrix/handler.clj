@@ -41,7 +41,7 @@
   ;; - check error handling at both the api, server, and database levels
   ;; - how to generate access tokens? it correlates to the user, should be unique
   ;; - write simple solutions, make notes about fixmes
-  (db/create-user! (get req-body "username") (:home-server config) ))
+  (db/create-user! (get req-body "username") (:home-server config)))
 
 (defroutes app-routes
   (POST "/_matrix/client/r0/register" req (register-user (:body req)))

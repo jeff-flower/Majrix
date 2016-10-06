@@ -43,6 +43,16 @@
           first
           :code))))
 
+(defn build-api-response
+  "Create the response for going back to the API layer. Will return an empty map
+  if no errors are found, otherwise it ."
+  [error]
+  (if (nil? error)
+    {}
+    {:error (condp = (get-error response)
+              "Neo.ClientError.Schema.ConstraintValidationFailed" :M_USER_IN_USE
+              :SYSTEM_ERROR)}))
+
 (defn create-user!
   "Attempts to create a user in the database."
   [user-id home-server]
@@ -54,9 +64,9 @@
     (try
       (let [response (client/post url {:basic-auth [username password]
                                        :content-type :json
-                                       :body (build-cypher-body body)})]
-        {:error (condp = (get-error response)
-                  "Neo.ClientError.Schema.ConstraintValidationFailed" :M_USER_IN_USE)})
+                                       :body (build-cypher-body body)})
+            error (get-error response)]
+        (build-api-response error))
       (catch Exception e
         ;; An unsuccessful status code means something went wrong with the
         ;; database connection (system down, unauthorized, etc.). This is
@@ -64,3 +74,9 @@
         ;; any information about what went wrong. We will want to log
         ;; what problem occurred.
         {:error :SYSTEM_ERROR}))))
+
+; Slight idea on how we could have contextual mapping of errors going back to
+; the API side.
+; {:UNIQUE_FAILED "Neo.ClientError.Schema.ConstraintValidationFailed"}
+; (build-api-response error {:UNIQUE_FAILED :M_ROOM_IN_USE})
+; (build-api-response error {:UNIQUE_FAILED :M_USER_IN_USE})
