@@ -35,12 +35,13 @@
 (defn get-error
   "Grabs the first error code from Neo4j's response, if present. Otherwise
   returns nil."
-  [{error :errors}]
-  (if (empty? error)
-    nil
-    (-> error
-        first
-        :code)))
+  [{body :body}]
+  (let [error (cheshire/parse-string body true)]
+    (if (empty? error)
+      nil
+      (-> error
+          first
+          :code))))
 
 (defn create-user!
   "Attempts to create a user in the database."
@@ -49,7 +50,7 @@
         url (str (:base-url database) (:cypher endpoints))
         username (:username database)
         password (:password database)
-        body (format "CREATE (u:User {user_id: '%s' home_server: '%s'})" user-id home-server)]
+        body (format "CREATE (u:User {user_id: '%s', home_server: '%s'})" user-id home-server)]
     (try
       (let [response (client/post url {:basic-auth [username password]
                                        :content-type :json
