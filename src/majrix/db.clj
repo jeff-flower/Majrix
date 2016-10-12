@@ -55,12 +55,6 @@
       ; TODO: convert neo4j error to internal error code (see notes at bottom of code)
       (assoc api-res-map :error error))))
 
-(defn build-api-response
-  "Create the response sent back to the API layer"
-  [{body :body}]
-  (-> {}
-      (add-error-response body)))
-
 (defn create-user!
   "Attempts to create a user in the database."
   [user-id home-server]
@@ -73,7 +67,9 @@
       (let [response (client/post url {:basic-auth [username password]
                                        :content-type :json
                                        :body (build-cypher-body body)})]
-        (build-api-response response))
+        ;; build the reponse
+        (-> {}
+            (add-error-response (:body response))))
       (catch Exception e
         ;; An unsuccessful status code means something went wrong with the
         ;; database connection (system down, unauthorized, etc.). This is
