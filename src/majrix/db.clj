@@ -12,13 +12,6 @@
 (def endpoints 
   {:cypher "transaction/commit"})
 
-; TODO: 
-; 1) create a map between neo4j errors and majrix error codes
-; 2) create a function that passes the response body to get-error,
-; takes the result and returns a map with keyword :error_code and value
-; of the result from get-error
-; 3) integrate the new function with create-user! 
-
 (defn build-cypher-body
   "Creates a JSON formatted string suitable for Neo4j's HTTP transaction API. As
   stated in Neo4j's [documentation](http://neo4j.com/docs/developer-manual/current/http-api/),
@@ -32,26 +25,41 @@
   [statement]
   (cheshire/generate-string {:statements [{:statement statement}]}))
 
+; neo4j errors:
+; "Neo.ClientError.Schema.ConstraintValidationFailed" :M_USER_IN_USE
+
 (defn get-error
   "Grabs the first error code from Neo4j's response, if present. Otherwise
   returns nil."
-  [{body :body}]
-  (let [error (cheshire/parse-string body true)]
-    (if (empty? error)
-      nil
-      (-> error
-          first
-          :code))))
+  [{errors :errors}]
+  ; 3 possible cases:
+  ; 1) error keyword not present in response from neo4j
+  ; 2) error keyword present but there is no error (this happens on cypher transaction commit requests
+  ; 3) error keyword present and there is an error
+  (if (empty? errors)
+    nil
+    (-> errors
+        first
+        :code)))
+
+;; api-res-map -> the response object being sent back to the api layer
+;; db-res-body -> body of the db response
+(defn add-error-response
+  "If an error is present in db-res-body, add the error message to api-res-map"
+  [api-res-map db-res-body]
+  (let [error (get-error (cheshire/parse-string db-res-body true))]
+    (if (nil? error)
+      ; if no error, return the api-res-map as is
+      api-res-map
+      ; if error, add error keyword and error message to api-res-map
+      ; TODO: convert neo4j error to internal error code (see notes at bottom of code)
+      (assoc api-res-map :error error))))
 
 (defn build-api-response
-  "Create the response for going back to the API layer. Will return an empty map
-  if no errors are found, otherwise it ."
-  [error]
-  (if (nil? error)
-    {}
-    {:error (condp = (get-error response)
-              "Neo.ClientError.Schema.ConstraintValidationFailed" :M_USER_IN_USE
-              :SYSTEM_ERROR)}))
+  "Create the response sent back to the API layer"
+  [{body :body}]
+  (-> {}
+      (add-error-response body)))
 
 (defn create-user!
   "Attempts to create a user in the database."
@@ -64,9 +72,8 @@
     (try
       (let [response (client/post url {:basic-auth [username password]
                                        :content-type :json
-                                       :body (build-cypher-body body)})
-            error (get-error response)]
-        (build-api-response error))
+                                       :body (build-cypher-body body)})]
+        (build-api-response response))
       (catch Exception e
         ;; An unsuccessful status code means something went wrong with the
         ;; database connection (system down, unauthorized, etc.). This is
