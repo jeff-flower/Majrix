@@ -3,13 +3,6 @@
             [midje.sweet :refer :all] 
             [majrix.db :as db]))
 
-(facts "build-http-body"
-  (let [single-statment (db/build-http-body "CREATE (u:User {name: 'Alice'})")]
-    (fact "Creates a body with a single statement"
-      (-> (cheshire/parse-string single-statment true)
-          :statements
-          count) => 1)))
-
 (facts "Extracting the neo4j error code"
   (let [parsed-body-with-error {:results [] :errors [{:code "Neo.Some.Error.Code" :message "Some error message"}]}
         parsed-body-with-empty-error {:results [] :errors []}

@@ -12,6 +12,9 @@
 (def endpoints 
   {:cypher "transaction/commit"})
 
+(def api-responses
+  {"Neo.ClientError.Schema.ConstraintValidationFailed" :CONSTRAINT_FAILED})
+
 (defn build-cypher-body
   "Creates a JSON formatted string suitable for Neo4j's HTTP transaction API. As
   stated in Neo4j's [documentation](http://neo4j.com/docs/developer-manual/current/http-api/),
@@ -47,13 +50,15 @@
 (defn add-error-response
   "If an error is present in db-res-body, add the error message to api-res-map"
   [api-res-map db-res-body]
-  (let [error (get-error (cheshire/parse-string db-res-body true))]
+  (let [error (get-error (cheshire/parse-string db-res-body true))
+        api-code ((get api-responses error) api-res-map)]
     (if (nil? error)
       ; if no error, return the api-res-map as is
       api-res-map
       ; if error, add error keyword and error message to api-res-map
       ; TODO: convert neo4j error to internal error code (see notes at bottom of code)
-      (assoc api-res-map :error error))))
+      api-code)))
+      ;(assoc api-res-map :error error))))
 
 (defn create-user!
   "Attempts to create a user in the database."
@@ -67,10 +72,11 @@
       (let [response (client/post url {:basic-auth [username password]
                                        :content-type :json
                                        :body (build-cypher-body body)})]
-        ;; build the reponse
-        (-> {}
+        ;; build the response
+        (-> {:CONSTRAINT_FAILED :M_USER_IN_USE}
             (add-error-response (:body response))))
       (catch Exception e
+        (print "in the exception clause")
         ;; An unsuccessful status code means something went wrong with the
         ;; database connection (system down, unauthorized, etc.). This is
         ;; a nonstandard Matrix error and the API shouldn't respond with
