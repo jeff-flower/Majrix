@@ -13,7 +13,7 @@
   {:cypher "transaction/commit"})
 
 (def api-responses
-  {"Neo.ClientError.Schema.ConstraintValidationFailed" :CONSTRAINT_FAILED})
+  {"Neo.ClientError.Schema.ConstraintValidationFailed" :M_USER_IN_USE})
 
 (defn build-cypher-body
   "Creates a JSON formatted string suitable for Neo4j's HTTP transaction API. As
@@ -41,24 +41,24 @@
   ; 3) error keyword present and there is an error
   (if (empty? errors)
     nil
+    ; calling first on empty seq returns nil
     (-> errors
         first
         :code)))
 
+;; add an error keyword and code to api-res-map if there is an error in db-res-body
 ;; api-res-map -> the response object being sent back to the api layer
 ;; db-res-body -> body of the db response
 (defn add-error-response
   "If an error is present in db-res-body, add the error message to api-res-map"
   [api-res-map db-res-body]
-  (let [error (get-error (cheshire/parse-string db-res-body true))
-        api-code ((get api-responses error) api-res-map)]
+  (let [error (get-error (cheshire/parse-string db-res-body true))]
     (if (nil? error)
       ; if no error, return the api-res-map as is
       api-res-map
       ; if error, add error keyword and error message to api-res-map
-      ; TODO: convert neo4j error to internal error code (see notes at bottom of code)
-      api-code)))
-      ;(assoc api-res-map :error error))))
+      ; api-responses is internal map for transforming neo4j error to internal error code
+      (assoc api-res-map :error (get api-responses error)))))
 
 (defn create-user!
   "Attempts to create a user in the database."
@@ -73,7 +73,7 @@
                                        :content-type :json
                                        :body (build-cypher-body body)})]
         ;; build the response
-        (-> {:CONSTRAINT_FAILED :M_USER_IN_USE}
+        (-> {}
             (add-error-response (:body response))))
       (catch Exception e
         (print "in the exception clause")
