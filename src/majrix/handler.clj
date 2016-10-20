@@ -4,7 +4,8 @@
             [compojure.core :refer :all]
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
-            [ring.middleware.json :refer [wrap-json-body]]
+            [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
+            [ring.util.response :refer [response]]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
             [majrix.db :as db]))
@@ -18,12 +19,14 @@
   "x")
 
 (defn compose-response
-  [user-id code]
-  (print code)
+  [user-id {code :error}]
+  (println code)
   (if (nil? code)
-    (cheshire/generate-string {:user_id user-id :access_token (generate-access-token) :home_server (:home-server config)})
+    ; no error, send successful response
+    (response {:user_id user-id :access_token (generate-access-token) :home_server (:home-server config)})
+    ; error
     {:status 400
-     :body (cheshire/generate-string {:errcode (name code) :error "Desired user ID is already taken."})}))
+     :body {:errcode (name code) :error "Desired user ID is already taken."}}))
 
 (defn register-user
   "Register a user. Currently does not support guest accounts, users must 
@@ -45,4 +48,7 @@
   (route/not-found "Not Found"))
 
 (def app
-  (wrap-defaults (wrap-json-body app-routes) (assoc-in site-defaults [:security :anti-forgery] false)))
+  (-> app-routes
+      wrap-json-body
+      wrap-json-response
+      (wrap-defaults (assoc-in site-defaults [:security :anti-forgery] false))))
