@@ -5,7 +5,7 @@
             [compojure.route :as route]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
-            [ring.util.response :refer [response]]
+            [ring.util.response :refer [response status]]
             [clojure.java.io :as io]
             [clojure.edn :as edn]
             [majrix.db :as db]))
@@ -15,6 +15,10 @@
                 slurp
                 edn/read-string))
 
+; map a matrix error code returned by the db side to a set of values suitable to return from the api to the user 
+(def db-error-map {:M_USER_IN_USE {:status 400
+                                   :message "Username in use."}})
+
 (defn generate-access-token
   []
   "x")
@@ -23,14 +27,17 @@
 ; user-id -> string
 ; db-res-map -> map returned from call to db.clj
 (defn compose-response
-  [user-id {code :error}]
-  (println code)
-  (if (nil? code)
+  [user-id {error-code :error}]
+  (println error-code)
+  (if (nil? error-code)
     ; no error, send successful response
+    ; ring response function creates map with status of 200, no headers and given body 
     (response {:user_id user-id :access_token (generate-access-token) :home_server (:home-server config)})
-    ; error
-    {:status 400
-     :body {:errcode (name code) :error "Desired user ID is already taken."}}))
+    ; handle error
+    (let [error-map (error-code db-error-map)]
+      (-> {:error (:message error-map)}
+          response
+          (status (:status error-map))))))
 
 
 ;; req-body -> map of json request 
@@ -43,8 +50,8 @@
   ;; - create schema for the route
   ;; - check error handling at both the api, server, and database levels
   ;; - how to generate access tokens? it correlates to the user, should be unique
-  (let [res (db/create-user! (get req-body "username") (:home-server config))]
-    (compose-response (get req-body "username") res)))
+  (let [db-res (db/create-user! (get req-body "username") (:home-server config))]
+    (compose-response (get req-body "username") db-res)))
 
 (defroutes app-routes
   (POST "/_matrix/client/r0/register" req (register-user (:body req)))
