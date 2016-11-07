@@ -26,7 +26,7 @@ From the project root ```lein ring server-headless```
   + Note: you'll probably need to set up some things on your own such as Leiningen
   
 ### Database Setup
-Since it's early, we're using a free Graphene Neo4j database instance. Head over to [Graphene](www.graphenedb.com) and sign up. Once you've registered, from the main screen after logging in, go to the 'Connection' tab. Make note of the 'REST URL', the 'REST Username' and the 'REST Password', you'll need them later.
+Since it's early, we're using a free Graphene Neo4j database instance. Head over to [Graphene](https://www.graphenedb.com) and sign up. Once you've registered, from the main screen after logging in, go to the 'Connection' tab. Make note of the 'REST URL', the 'REST Username' and the 'REST Password', you'll need them later.
   
 ### Properties.edn file
 You'll need a place to store user specific configuration values. From the root of the project
