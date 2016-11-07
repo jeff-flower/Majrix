@@ -11,6 +11,9 @@ No, no we didn't. In case you're not already aware of it's awesomeness, [Clojure
 
 [Clojure For the Brave and True](http://www.braveclojure.com) is an excellent resource.
 
+## Blah Blah, How Do I Just Run It?
+From the project root ```lein ring server-headless```
+
 ## Getting Started
 
 ### IDE Setup
@@ -23,7 +26,7 @@ No, no we didn't. In case you're not already aware of it's awesomeness, [Clojure
   + Note: you'll probably need to set up some things on your own such as Leiningen
   
 ### Database Setup
-Since it's early, we're using a free Graphene Neo4j database instance. Head over to [Graphene]() and sign up. Once you've registered, from the main screen after logging in, go to the 'Connection' tab. Make note of the 'REST URL', the 'REST Username' and the 'REST Password', you'll need them later.
+Since it's early, we're using a free Graphene Neo4j database instance. Head over to [Graphene](www.graphenedb.com) and sign up. Once you've registered, from the main screen after logging in, go to the 'Connection' tab. Make note of the 'REST URL', the 'REST Username' and the 'REST Password', you'll need them later.
   
 ### Properties.edn file
 You'll need a place to store user specific configuration values. From the root of the project
@@ -69,7 +72,8 @@ your project and enter:
 
     => lein midje
 
-### Compojure
+### Compojure and Ring
+TODO: add compojure and ring resources 
 
 ### Docker
 The `Dockerfile` sets up a development environment for you and lets you focus on
