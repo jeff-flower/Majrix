@@ -57,6 +57,7 @@
       api-res-map
       ; if error, add error keyword and error message to api-res-map
       ; api-responses is internal map for transforming neo4j error to internal error code
+      ; TODO returns nil right now, do we really want to do that? pass back Neo4j error otherwise?
       (assoc api-res-map :error (get api-responses error)))))
 
 (defn create-user!
@@ -75,7 +76,6 @@
         (-> {}
             (add-error-response (:body response))))
       (catch Exception e
-        (print "in the exception clause")
         ;; An unsuccessful status code means something went wrong with the
         ;; database connection (system down, unauthorized, etc.). This is
         ;; a nonstandard Matrix error and the API shouldn't respond with
