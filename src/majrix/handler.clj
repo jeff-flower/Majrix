@@ -28,33 +28,21 @@
 ; db-res-map -> map returned from call to db.clj
 (defn compose-response
   [user-id {error-code :error}]
-  (println error-code)
   (if (nil? error-code)
-    ; no error, send successful response
-    ; ring response function creates map with status of 200, no headers and given body 
+    ;; no error, send successful response
+    ;; ring response function creates map with status of 200, no headers and given body 
     (ring-response/response {:user_id user-id :access_token (generate-access-token) :home_server (:home-server config)})
-    ; handle error
+                                        ; handle error
     (let [error-map (error-code db-error-map)]
       (-> {:error (:message error-map)}
           ring-response/response
           (ring-response/status (:status error-map))))))
 
-
-;; req-body -> map of json request 
-(defn register-user
-  "Register a user. Currently does not support guest accounts, users must 
-  register."
-  [req-body]
-  ;; - return a 400 if username is invalid, in use, or belongs to the application
-  ;;   namespace, or doesn't contain the required properties
-  ;; - create schema for the route
-  ;; - check error handling at both the api, server, and database levels
-  ;; - how to generate access tokens? it correlates to the user, should be unique
-  (let [db-res (db/create-user! (get req-body "username") (:home-server config))]
-    (compose-response (get req-body "username") db-res)))
-
 (defroutes app-routes
-  (POST "/_matrix/client/r0/register" req (register-user (:body req)))
+  (POST "/_matrix/client/r0/register" req (fn [req]
+                                            (let [userid (get-in req [:body "username"])]
+                                              (->>(db/create-user! userid (:home-server config))
+                                                  (compose-response userid)))))
   (route/not-found "Not Found"))
 
 (def app
